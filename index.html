@@ -69,9 +69,53 @@ li b{font-variant-numeric:tabular-nums}
 .hint{color:var(--mute);font-size:.85rem;margin:8px 0 0}
 .empty{color:var(--mute);padding:16px 0}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main>
+<div id="authGate" style="max-width:420px;margin:40px auto;padding:20px;background:white;border-radius:16px">
+  <h2>Доступ к приложению</h2>
+
+  <div id="loginBox">
+    <p>Введите email, чтобы получить ссылку для входа.</p>
+
+    <input
+      id="authEmail"
+      type="email"
+      placeholder="Ваш email"
+      style="width:100%;margin-bottom:10px"
+    >
+
+    <button
+      id="sendMagicLink"
+      style="width:100%;padding:12px"
+    >
+      Получить ссылку для входа
+    </button>
+
+    <p id="authMessage"></p>
+  </div>
+
+  <div id="inviteBox" style="display:none">
+    <p>Введите код приглашения</p>
+
+    <input
+      id="inviteCode"
+      type="text"
+      placeholder="Например TEST-2026"
+      style="width:100%;margin-bottom:10px"
+    >
+
+    <button
+      id="activateInvite"
+      style="width:100%;padding:12px"
+    >
+      Активировать доступ
+    </button>
+
+    <p id="inviteMessage"></p>
+  </div>
+</div>
+  <main id="financeApp" style="display:none">
 <header>
   <h1>Мои финансы</h1>
   <div style="display:flex;gap:8px">
@@ -182,6 +226,90 @@ $("impFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new Fi
   rd.readAsText(f);e.target.value=""};
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 render();
-</script>
+</script>const SUPABASE_URL = "sb_publishable_NMI12j1VWChoX_Yj1kVSeQ_iGLBDgks"
+const SUPABASE_KEY = "https://nksleztugmfucotnjczf.supabase.co/rest/v1/"
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); async function checkAccess() {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    document.getElementById("authGate").style.display = "block";
+    document.getElementById("financeApp").style.display = "none";
+    return;
+  }
+
+  const email = session.user.email;
+
+  const { data: license } = await sb
+    .from("licenses")
+    .select("active")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (license && license.active) {
+    document.getElementById("authGate").style.display = "none";
+    document.getElementById("financeApp").style.display = "block";
+  } else {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("inviteBox").style.display = "block";
+    document.getElementById("authGate").style.display = "block";
+    document.getElementById("financeApp").style.display = "none";
+  }
+}
+
+document.getElementById("sendMagicLink").onclick = async () => {
+  const email = document.getElementById("authEmail").value.trim();
+
+  if (!email) {
+    document.getElementById("authMessage").textContent =
+      "Введите email";
+    return;
+  }
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: "https://gkoka892517-ui.github.io/fin/"
+    }
+  });
+
+  document.getElementById("authMessage").textContent =
+    error
+      ? "Не удалось отправить письмо"
+      : "Проверьте почту. Мы отправили ссылку для входа.";
+};
+
+document.getElementById("activateInvite").onclick = async () => {
+  const code = document.getElementById("inviteCode").value.trim();
+
+  if (!code) {
+    document.getElementById("inviteMessage").textContent =
+      "Введите код приглашения";
+    return;
+  }
+
+  const { data, error } = await sb.rpc("activate_invite", {
+    invite_code: code
+  });
+
+  const message = document.getElementById("inviteMessage");
+
+  if (error) {
+    message.textContent = "Ошибка активации";
+    return;
+  }
+
+  message.textContent = data.message || "";
+
+  if (data.success) {
+    await checkAccess();
+  }
+};
+
+sb.auth.onAuthStateChange(() => {
+  checkAccess();
+});
+
+checkAccess();
 </body>
 </html>
