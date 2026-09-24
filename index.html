@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мои финансы</title>
+<meta name="theme-color" content="#1b6b66">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Финансы">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#e9eeed;--card:#fbfcfc;--ink:#14302e;--mute:#5f7573;--line:#cfdad8;--acc:#1b6b66;--acc-ink:#fff;--warn:#b3402f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1c1b;--card:#172827;--ink:#e3eeec;--mute:#93aaa7;--line:#274240;--acc:#5fc4bb;--acc-ink:#062220;--warn:#ff9c88}}
+:root[data-theme="dark"]{--bg:#0f1c1b;--card:#172827;--ink:#e3eeec;--mute:#93aaa7;--line:#274240;--acc:#5fc4bb;--acc-ink:#062220;--warn:#ff9c88}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Manrope",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:1.1rem;margin:0;font-weight:700}
+select,input,button{font:inherit;color:inherit}
+select,input{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.total{margin:22px 0 6px;font-size:clamp(2.4rem,11vw,3.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
+.sub{color:var(--mute);margin:0 0 12px}
+.cats{display:grid;gap:8px;margin-bottom:24px}
+.cat{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;font-size:.92rem}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:6px}
+.num{font-variant-numeric:tabular-nums;color:var(--mute)}
+.add{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.add .wide{grid-column:1/-1}
+.add button{grid-column:1/-1;background:var(--acc);color:var(--acc-ink);border:0;border-radius:10px;padding:12px;font-weight:700;cursor:pointer}
+h2{font-size:1rem;margin:0 0 8px}
+ul{list-style:none;margin:0;padding:0}
+.sheet{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.sheet section{padding:12px 12px 6px;min-width:0}
+.sheet section+section{border-left:1px solid var(--line)}
+.head{padding-bottom:8px;border-bottom:2px solid var(--line);font-size:1.05rem}
+.head span{display:block;color:var(--mute);font-size:.85rem;font-weight:600}
+.head b{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+li{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem;overflow-wrap:anywhere}
+li:last-child{border-bottom:0}
+.sheet ul{max-height:320px;overflow-y:auto;overscroll-behavior:contain}
+li b{display:block}
+li small{display:block;color:var(--mute)}
+li b{font-variant-numeric:tabular-nums}
+.del{background:none;border:0;color:var(--mute);cursor:pointer;font-size:1.2rem;padding:4px 8px;border-radius:8px}
+.del:hover{color:var(--warn)}
+.seg{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;background:var(--line);border-radius:10px;padding:3px}
+.add .seg button{grid-column:auto;background:none;color:var(--mute);padding:8px 4px;font-size:.9rem;border-radius:8px}
+.add .seg button[aria-pressed="true"]{background:var(--card);color:var(--ink)}
+.stats{display:flex;gap:24px;margin:22px 0 20px;flex-wrap:wrap}
+.stats span{font-size:1.3rem;font-weight:800}
+.stats div{font-variant-numeric:tabular-nums}
+.stats small{display:block;color:var(--mute)}
+.plus{color:var(--acc)}
+.save-box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:24px}
+.save-box .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-weight:600}
+.save-box .row b{font-size:1.3rem;font-variant-numeric:tabular-nums}
+.goal{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:.9rem;color:var(--mute);flex-wrap:wrap}
+.goal input{width:140px;padding:6px 10px}
+.backup{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.backup button{flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
+.hint{color:var(--mute);font-size:.85rem;margin:8px 0 0}
+.empty{color:var(--mute);padding:16px 0}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Мои финансы</h1>
+  <div style="display:flex;gap:8px">
+    <input type="month" id="month" aria-label="Месяц">
+    <select id="cur" aria-label="Валюта"><option>₽</option><option>QAR</option><option>$</option><option>€</option></select>
+  </div>
+</header>
+
+<div class="stats"><div><small>Доходы</small><span class="plus" id="inc">0</span></div><div><small>Расходы</small><span id="exp">0</span></div><div><small>Отложено</small><span id="savM">0</span></div></div>
+<div class="cats" id="cats"></div>
+
+<div class="save-box">
+  <div class="row"><span>Накопления</span><b id="savTotal">0</b></div>
+  <div class="bar" style="margin-top:8px"><i id="savBar" style="width:0"></i></div>
+  <p class="sub" style="margin:8px 0 0" id="savMonth"></p>
+  <div class="goal"><label for="goal">Цель</label><input id="goal" type="number" inputmode="decimal" min="0" placeholder="Сумма"><span id="goalText"></span></div>
+</div>
+
+<div class="add">
+  <div class="seg" role="group" aria-label="Тип записи"><button type="button" id="tExp" aria-pressed="true">Расход</button><button type="button" id="tInc" aria-pressed="false">Доход</button><button type="button" id="tSav" aria-pressed="false">Накопление</button></div>
+  <input id="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Сумма" aria-label="Сумма">
+  <select id="cat" aria-label="Категория"></select>
+  <input class="wide" id="note" placeholder="Заметка (необязательно)" aria-label="Заметка">
+  <input class="wide" id="date" type="date" aria-label="Дата">
+  <button id="save">Добавить расход</button>
+</div>
+
+<h2>Операции за месяц</h2>
+<div class="sheet">
+  <section aria-label="Доходы"><div class="head"><span>Доходы</span><b class="plus" id="inc2">0</b></div><ul id="listInc"></ul></section>
+  <section aria-label="Расходы"><div class="head"><span>Расходы</span><b id="exp2">0</b></div><ul id="listExp"></ul></section>
+</div>
+<h2 style="margin-top:24px">Отложено за месяц</h2>
+<div class="sheet" style="grid-template-columns:1fr"><section aria-label="Накопления"><ul id="listSav"></ul></section></div>
+<div class="backup"><button id="expBtn" type="button">Сохранить копию</button><button id="impBtn" type="button">Загрузить копию</button><input type="file" id="impFile" accept="application/json,.json" hidden></div>
+<p class="hint">Данные хранятся только на этом устройстве. Сохраняйте копию время от времени.</p>
+</main>
+
+<script>
+const CATS={sav:["Подушка безопасности","Отпуск","Крупная покупка","Другое"],exp:["Еда","Транспорт","Жильё","Работа","Развлечения","Здоровье","Другое"],inc:["Зарплата","Клиенты","Подарок","Другое"]};
+let type="exp",goal=0;
+try{goal=parseFloat(localStorage.getItem("exp:goal"))||0}catch(e){}
+const $=id=>document.getElementById(id);
+let items=[],cur="₽";
+try{items=JSON.parse(localStorage.getItem("exp:items")||"[]");cur=localStorage.getItem("exp:cur")||"₽"}catch(e){}
+const save=()=>{try{localStorage.setItem("exp:items",JSON.stringify(items));localStorage.setItem("exp:cur",cur)}catch(e){}};
+const today=new Date().toISOString().slice(0,10);
+$("date").value=today;$("month").value=today.slice(0,7);$("cur").value=cur;
+const LABEL={exp:"Добавить расход",inc:"Добавить доход",sav:"Добавить в накопления"};
+function setType(t){
+  type=t;
+  [["tExp","exp"],["tInc","inc"],["tSav","sav"]].forEach(([id,k])=>$(id).setAttribute("aria-pressed",t==k));
+  $("cat").innerHTML=CATS[t].map(c=>`<option>${c}</option>`).join("");
+  $("save").textContent=LABEL[t];
+}
+setType("exp");
+$("tExp").onclick=()=>setType("exp");$("tInc").onclick=()=>setType("inc");$("tSav").onclick=()=>setType("sav");
+$("goal").value=goal||"";
+$("goal").onchange=e=>{goal=parseFloat(e.target.value)||0;try{localStorage.setItem("exp:goal",goal)}catch(err){}render()};
+const fmt=n=>n.toLocaleString("ru-RU",{maximumFractionDigits:2})+" "+cur;
+const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function render(){
+  const m=$("month").value;
+  const rows=items.filter(i=>i.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  const isInc=i=>i.type=="inc",isExp=i=>i.type!="inc"&&i.type!="sav";
+  const sav=rows.filter(i=>i.type=="sav").reduce((s,i)=>s+i.amount,0);
+  const inc=rows.filter(isInc).reduce((s,i)=>s+i.amount,0);
+  const exp=rows.filter(i=>isExp(i)).reduce((s,i)=>s+i.amount,0);
+  $("inc2").textContent=fmt(inc);$("exp2").textContent=fmt(exp);
+  $("inc").textContent=fmt(inc);$("exp").textContent=fmt(exp);$("savM").textContent=fmt(sav);
+  const by={};rows.filter(i=>isExp(i)).forEach(i=>by[i.cat]=(by[i.cat]||0)+i.amount);
+  const top=Math.max(0,...Object.values(by));
+  $("cats").innerHTML=Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([c,v])=>
+    `<div class="cat"><span>${c}</span><div class="bar"><i style="width:${top?v/top*100:0}%"></i></div><span class="num">${fmt(v)}</span></div>`).join("");
+  const row=i=>`<li><div>${esc(i.note||i.cat)}<small>${i.cat} · ${new Date(i.date+"T00:00").toLocaleDateString("ru-RU",{day:"numeric",month:"short"})}</small><b class="${isInc(i)||i.type=="sav"?"plus":""}">${fmt(i.amount)}</b></div><button class="del" data-id="${i.id}" aria-label="Удалить запись">×</button></li>`;
+  const fill=(el,list,msg)=>{el.innerHTML=list.length?list.map(row).join(""):`<li class="empty">${msg}</li>`};
+  fill($("listInc"),rows.filter(isInc),"Доходов пока нет");
+  fill($("listSav"),rows.filter(i=>i.type=="sav"),"В этом месяце ничего не откладывали");
+  const savAll=items.filter(i=>i.type=="sav").reduce((s,i)=>s+i.amount,0);
+  $("savTotal").textContent=fmt(savAll);
+  $("savMonth").textContent=sav?`В этом месяце отложено ${fmt(sav)}`:"В этом месяце пока ничего не отложено";
+  $("savBar").style.width=(goal?Math.min(100,savAll/goal*100):0)+"%";
+  $("goalText").textContent=goal?`${Math.round(savAll/goal*100)}% от цели`:"";
+  fill($("listExp"),rows.filter(i=>isExp(i)),"Расходов пока нет");
+}
+$("save").onclick=()=>{
+  const amount=parseFloat($("amount").value);
+  if(!(amount>0)){$("amount").focus();return}
+  items.push({id:Date.now(),type,amount,cat:$("cat").value,note:$("note").value.trim(),date:$("date").value||today});
+  $("amount").value="";$("note").value="";
+  if(!$("date").value.startsWith($("month").value))$("month").value=($("date").value||today).slice(0,7);
+  save();render();$("amount").focus();
+};
+["listInc","listExp","listSav"].forEach(id=>$(id).onclick=e=>{const b=e.target.closest(".del");if(!b)return;items=items.filter(i=>i.id!=b.dataset.id);save();render()});
+$("month").onchange=render;
+$("cur").onchange=e=>{cur=e.target.value;save();render()};
+
+$("expBtn").onclick=()=>{const b=new Blob([JSON.stringify({v:1,items,cur,goal})],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="finance-"+today+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$("impBtn").onclick=()=>$("impFile").click();
+$("impFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const d=JSON.parse(rd.result);if(!Array.isArray(d.items))throw 0;
+    if(!confirm("Заменить текущие данные данными из файла?"))return;
+    items=d.items.filter(i=>i&&+i.amount>0&&typeof i.date==="string").map((i,n)=>({id:i.id||Date.now()+n,type:i.type,amount:+i.amount,cat:String(i.cat||"Другое"),note:String(i.note||""),date:i.date}));
+    cur=d.cur||cur;goal=+d.goal||0;$("cur").value=cur;$("goal").value=goal||"";
+    try{localStorage.setItem("exp:goal",goal)}catch(_){}
+    save();render()}catch(_){alert("Не удалось прочитать файл")}};
+  rd.readAsText(f);e.target.value=""};
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+render();
+</script>
+</body>
+</html>
