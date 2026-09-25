@@ -69,9 +69,17 @@ li b{font-variant-numeric:tabular-nums}
 .hint{color:var(--mute);font-size:.85rem;margin:8px 0 0}
 .empty{color:var(--mute);padding:16px 0}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<main>
+<div id="accessGate" style="max-width:420px;margin:40px auto;padding:20px;background:var(--card);border:1px solid var(--line);border-radius:16px">
+  <h2 style="font-size:1.2rem;margin-bottom:10px">Доступ к приложению</h2>
+  <p class="sub">Введите одноразовый код доступа.</p>
+  <input id="accessCode" type="text" placeholder="Код доступа" style="width:100%;margin-bottom:10px">
+  <button id="activateAccess" style="width:100%;background:var(--acc);color:var(--acc-ink);border:0;border-radius:10px;padding:12px;font-weight:700">Активировать доступ</button>
+  <p id="accessMessage" class="hint"></p>
+</div>
+<main id="financeApp" style="display:none">
 <header>
   <h1>Мои финансы</h1>
   <div style="display:flex;gap:8px">
@@ -106,11 +114,66 @@ li b{font-variant-numeric:tabular-nums}
 </div>
 <h2 style="margin-top:24px">Отложено за месяц</h2>
 <div class="sheet" style="grid-template-columns:1fr"><section aria-label="Накопления"><ul id="listSav"></ul></section></div>
-<div class="backup"><button id="expBtn" type="button">Сохранить копию</button><button id="impBtn" type="button">Загрузить копию</button><input type="file" id="impFile" accept="application/json,.json" hidden></div>
+<div class="backup"><button id="expBtn" type="button">Сохранить резервную копию</button><button id="impBtn" type="button">Восстановить из копии</button><input type="file" id="impFile" accept="application/json,.json" hidden></div>
 <p class="hint">Данные хранятся только на этом устройстве. Сохраняйте копию время от времени.</p>
 </main>
 
 <script>
+const SUPABASE_URL = "https://nksleztugmfucotnjczf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_NMI12j1VWChoX_Yj1kVSeQ_iGLBDgksы";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ACCESS_FLAG = "finance:device-access";
+const DEVICE_KEY = "finance:device-id";
+function getDeviceId(){
+  let id = localStorage.getItem(DEVICE_KEY);
+  if(!id){
+    id = (crypto.randomUUID ? crypto.randomUUID() : "dev-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+    localStorage.setItem(DEVICE_KEY,id);
+  }
+  return id;
+}
+function showApp(){
+  document.getElementById("accessGate").style.display="none";
+  document.getElementById("financeApp").style.display="block";
+}
+function showGate(msg=""){
+  document.getElementById("accessGate").style.display="block";
+  document.getElementById("financeApp").style.display="none";
+  document.getElementById("accessMessage").textContent=msg;
+}
+async function checkDeviceAccess(){
+  if(localStorage.getItem(ACCESS_FLAG)==="1") {
+    showApp();
+    if(navigator.onLine){
+      try{
+        const {data,error}=await sb.rpc("check_device_access",{p_device_id:getDeviceId()});
+        if(!error && data===false){ localStorage.removeItem(ACCESS_FLAG); showGate("Доступ отключён"); }
+      }catch(e){}
+    }
+    return;
+  }
+  if(!navigator.onLine){ showGate("Для первой активации нужен интернет"); return; }
+  try{
+    const {data,error}=await sb.rpc("check_device_access",{p_device_id:getDeviceId()});
+    if(!error && data===true){ localStorage.setItem(ACCESS_FLAG,"1"); showApp(); }
+    else showGate();
+  }catch(e){ showGate("Не удалось проверить доступ"); }
+}
+
+document.getElementById("activateAccess").onclick=async()=>{
+  const code=document.getElementById("accessCode").value.trim();
+  const msg=document.getElementById("accessMessage");
+  if(!code){msg.textContent="Введите код доступа";return;}
+  msg.textContent="Проверяем код…";
+  try{
+    const {data,error}=await sb.rpc("activate_device",{invite_code:code,p_device_id:getDeviceId()});
+    if(error){msg.textContent="Ошибка активации";return;}
+    msg.textContent=data?.message||"";
+    if(data?.success){localStorage.setItem(ACCESS_FLAG,"1");showApp();}
+  }catch(e){msg.textContent="Не удалось активировать доступ";}
+};
+checkDeviceAccess();
 const CATS={sav:["Подушка безопасности","Отпуск","Крупная покупка","Другое"],exp:["Еда","Транспорт","Жильё","Работа","Развлечения","Здоровье","Другое"],inc:["Зарплата","Клиенты","Подарок","Другое"]};
 let type="exp",goal=0;
 try{goal=parseFloat(localStorage.getItem("exp:goal"))||0}catch(e){}
